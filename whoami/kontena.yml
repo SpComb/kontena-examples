@@ -1,0 +1,24 @@
+stack: terom/whoami
+version: 0.1.0
+expose: whoami
+variables:
+  scale:
+    type: integer
+    from:
+        env: WHOAMI_SCALE
+        default: 4
+  path:
+    type: string
+    from:
+        env: WHOAMI_PATH
+services:
+    whoami:
+        image: jwilder/whoami
+        links:
+          - haproxy/lb
+        environment:
+          KONTENA_LB_MODE: http
+          KONTENA_LB_BALANCE: roundrobin
+          KONTENA_LB_INTERNAL_PORT: 8000
+          KONTENA_LB_VIRTUAL_PATH: ${path}
+        instances: ${scale}
