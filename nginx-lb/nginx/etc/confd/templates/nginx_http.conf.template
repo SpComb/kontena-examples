@@ -1,0 +1,66 @@
+{{ $listen_ipv4 := (getenv "LISTEN_IPV4") }}
+{{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
+{{ range $service := lsdir "/services"}}
+	{{ if exists (printf "/services/%s/http" $service) }}
+		{{ $http := json (getv (printf "/services/%s/http" $service)) }}
+		# {{$service}}
+		upstream {{$service}} {
+		{{ range gets (printf "/services/%s/backends/*" $service) }}
+			{{ $backendName := base .Key }}
+			{{ $backend := json .Value }}
+			# {{$backendName}}
+			{{ if and $backend.ipv4 $backend.http }}
+			server {{$backend.ipv4}}:{{$backend.http}};
+			{{ end }}
+			{{ if and $backend.ipv6 $backend.http }}
+			server {{$backend.ipv6}}:{{$backend.http}};
+			{{ end }}
+		{{ end }}
+		}
+	{{ end }}
+{{ end }}
+
+# default server
+server {
+{{ if $listen_ipv4 }}
+	listen {{$listen_ipv4}}:80 default_server;
+{{ end }}
+{{ if $listen_ipv6 }}
+	listen [{{$listen_ipv6}}]:80 default_server;
+{{ end }}
+
+{{ range $service := lsdir "/services"}}
+	# {{$service}}
+	{{ if exists (printf "/services/%s/http" $service) }}
+		{{ $http := json (getv (printf "/services/%s/http" $service)) }}
+		{{ if not $http.host }}
+		location {{or $http.location "/"}} {
+			proxy_pass http://{{$service}};
+		}
+		{{ end }}
+	{{ end }}
+{{ end }}
+}
+
+{{ range $service := lsdir "/services"}}
+	{{ if exists (printf "/services/%s/http" $service) }}
+	# {{$service}}
+		{{ $http := json (getv (printf "/services/%s/http" $service)) }}
+		{{ if $http.host }}
+			server {
+			{{ if $listen_ipv4 }}
+				listen {{$listen_ipv4}}:80;
+			{{ end }}
+			{{ if $listen_ipv6 }}
+				listen [{{$listen_ipv6}}]:80;
+			{{ end }}
+
+				server_name {{$http.host}}{{range $alias := $http.aliases}} {{$alias}}{{end}};
+
+				location {{or $http.location "/"}} {
+					proxy_pass http://{{$service}};
+				}
+			}
+		{{ end }}
+	{{ end }}
+{{ end }}

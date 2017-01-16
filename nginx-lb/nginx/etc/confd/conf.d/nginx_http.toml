@@ -1,6 +1,6 @@
 [template]
-src   = "nginx.conf.template"
-dest  = "/etc/nginx/confd.conf"
+src   = "nginx_http.conf.template"
+dest  = "/etc/nginx/http.conf"
 keys  = [
   "/services",
 ]

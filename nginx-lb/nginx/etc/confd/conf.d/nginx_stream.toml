@@ -1,0 +1,9 @@
+[template]
+src   = "nginx_stream.conf.template"
+dest  = "/etc/nginx/stream.conf"
+keys  = [
+  "/services",
+]
+
+check_cmd = "/usr/sbin/nginx -t"
+reload_cmd = "/usr/sbin/nginx -s reload"
