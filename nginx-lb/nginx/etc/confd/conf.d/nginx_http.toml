@@ -5,5 +5,4 @@ keys  = [
   "/http",
 ]
 
-check_cmd = "/usr/sbin/nginx -t"
 reload_cmd = "/usr/sbin/nginx -s reload"
