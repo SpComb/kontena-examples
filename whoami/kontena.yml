@@ -6,19 +6,14 @@ variables:
     type: integer
     from:
         env: WHOAMI_SCALE
-        default: 4
+    default: 4
   path:
     type: string
     from:
         env: WHOAMI_PATH
+    default: /whoami
 services:
     whoami:
-        image: jwilder/whoami
-        links:
-          - haproxy/lb
-        environment:
-          KONTENA_LB_MODE: http
-          KONTENA_LB_BALANCE: roundrobin
-          KONTENA_LB_INTERNAL_PORT: 8000
-          KONTENA_LB_VIRTUAL_PATH: ${path}
+        image: registry.${GRID}.kontena.local/whoami
+        build: .
         instances: ${scale}
