@@ -1,4 +1,4 @@
-nginx loadbalancer for Kontena, using `confd` and `kontena-registrator`.
+`nginx` loadbalancer for Kontena, using `confd` and `kontena-registrator`.
 
 ## Build
 
@@ -9,9 +9,9 @@ You must first build the `kontena/registrator:dev` image locally:
     kontena-registrator $ git submodule update --init
     kontena-registrator $ docker build -t kontena/registrator:dev
 
-The this stack can be built:
+Then this stack can be built:
 
-   $ kontena stack build --no-pull
+    $ kontena stack build --no-pull
 
 This requires `--no-pull` to use the local `kontena/registrator:dev` image, instead of attempting to pull it from the Docker Hub.
 
@@ -33,6 +33,8 @@ services:
         io.kontena.nginx.http: 8000
         io.kontena.nginx.http.location: /whoami
 ```
+
+You do not need to link the service to the `nginx-lb` service.
 
 ## Load balancer
 
