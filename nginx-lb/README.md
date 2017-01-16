@@ -36,7 +36,7 @@ services:
 
 You do not need to link the service to the `nginx-lb` service.
 
-## Load balancer
+### Load balancer
 
 The `nginx-lb/nginx` service is configured using environment variables:
 
