@@ -1,0 +1,63 @@
+{{ $listen_ipv4 := (getenv "LISTEN_IPV4") }}
+{{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
+{{ range $service := lsdir "/services"}}
+# {{$service}}
+{{ if exists (printf "/services/%s/tcp" $service) }}
+stream {
+	{{ $frontend_tcp := json (getv (printf "/services/%s/tcp" $service)) }}
+	upstream tcp-{{$service}} {
+		{{ range gets (printf "/services/%s/backends/*" $service) }}
+		{{  $backendName := base .Key }}
+		{{  $backend := json .Value }}
+		# {{$backendName}}
+		{{  if and $backend.ipv4 $backend.tcp }}
+		server {{$backend.ipv4}}:{{$backend.tcp}};
+		{{   end }}
+		{{  if and $backend.ipv6 $backend.tcp }}
+		server [{{$backend.ipv6}}]:{{$backend.tcp}};
+		{{   end }}
+		{{ end }}
+	}
+
+	server {
+		{{ if $listen_ipv4 }}
+		listen {{$listen_ipv4}}:{{$frontend_tcp.port}};
+		{{ end }}
+		{{ if $listen_ipv6 }}
+		listen [{{$listen_ipv6}}]:{{$frontend_tcp.port}};
+		{{ end }}
+
+		proxy_pass tcp-{{$service}};
+	}
+}
+{{ end }}
+{{ if exists (printf "/services/%s/udp" $service) }}
+stream {
+	{{ $frontend_udp := json (getv (printf "/services/%s/udp" $service)) }}
+	upstream udp-{{$service}} {
+		{{ range gets (printf "/services/%s/backends/*" $service) }}
+		{{  $backendName := base .Key }}
+		{{  $backend := json .Value }}
+		# {{$backendName}}
+		{{  if and $backend.ipv4 $backend.udp }}
+		server {{$backend.ipv4}}:{{$backend.udp}} weight={{$backend.weight}};
+		{{   end }}
+		{{  if and $backend.ipv6 $backend.udp }}
+		server [{{$backend.ipv6}}]:{{$backend.udp}} weight={{$backend.weight}};
+		{{   end }}
+		{{ end }}
+	}
+
+	server {
+		{{ if $listen_ipv4 }}
+		listen {{$listen_ipv4}}:{{$frontend_udp.port}} udp;
+		{{ end }}
+		{{ if $listen_ipv6 }}
+		listen [{{$listen_ipv6}}]:{{$frontend_udp.port}} udp;
+		{{ end }}
+
+		proxy_pass udp-{{$service}};
+	}
+}
+{{ end }}
+{{ end }}
