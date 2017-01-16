@@ -1,0 +1,32 @@
+{{ $listen_ipv4 := (getenv "LISTEN_IPV4") }}
+{{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
+
+{{ range $service := lsdir "/services/udp"}}
+	# {{$service}}
+	{{ $udp := json (getv (printf "/services/udp/%s/udp" $service)) }}
+		upstream udp-{{$service}} {
+		{{ range gets (printf "/services/udp/%s/containers/*" $service) }}
+			{{ $name := base .Key }}
+			{{ $container := json .Value }}
+			# {{$name}}
+			{{ if and $container.ipv4 $container.udp }}
+			server {{$container.ipv4}}:{{$container.udp}};
+			{{ end }}
+			{{ if and $container.ipv6 $container.udp }}
+			server [{{$container.ipv6}}]:{{$container.udp}};
+			{{ end }}
+		{{ end }}
+		}
+
+		server {
+		{{ if $listen_ipv4 }}
+			listen {{$listen_ipv4}}:{{$udp.port}} udp;
+		{{ end }}
+		{{ if $listen_ipv6 }}
+			listen [{{$listen_ipv6}}]:{{$udp.port}} udp;
+		{{ end }}
+
+			proxy_pass udp-{{$service}};
+		}
+	{{ end }}
+{{ end }}

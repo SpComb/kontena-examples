@@ -1,8 +1,8 @@
 [template]
-src   = "nginx_stream.conf.template"
-dest  = "/etc/nginx/stream.conf"
+src   = "nginx_stream_tcp.conf.template"
+dest  = "/etc/nginx/stream_tcp.conf"
 keys  = [
-  "/services",
+  "/services/tcp",
 ]
 
 check_cmd = "/usr/sbin/nginx -t"

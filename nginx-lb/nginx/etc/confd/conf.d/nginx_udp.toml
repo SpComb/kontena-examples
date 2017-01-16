@@ -1,8 +1,8 @@
 [template]
-src   = "nginx_http.conf.template"
-dest  = "/etc/nginx/http.conf"
+src   = "nginx_stream_udp.conf.template"
+dest  = "/etc/nginx/stream_udp.conf"
 keys  = [
-  "/services/http",
+  "/services/udp",
 ]
 
 check_cmd = "/usr/sbin/nginx -t"
