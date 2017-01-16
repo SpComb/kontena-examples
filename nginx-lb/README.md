@@ -97,3 +97,48 @@ Forward HTTP requests on the given nginx `server_name` aliases.
 Accept HTTP connections on the given port on the load balancer.
 
 Defaults to the `LISTEN_HTTP` port.
+
+## Schema
+
+The `etcd` schema used.
+
+#### `/kontena/nginx/http/:service/server`
+
+```json
+{
+  "port": 8080,
+  "host": "test.example.com",
+  "aliases": "test",
+  "location": "/test"
+}
+```
+
+#### `/kontena/nginx/http/:service/upstreams/:upstream`
+
+```json
+{"ipv4": "10.81.128.0", "port": 8000}
+```
+
+#### `/kontena/nginx/tcp/:service/server`
+
+```json
+{"port": 8000}
+```
+
+#### `/kontena/nginx/tcp/:service/upstreams/:upstream`
+
+```json
+{"ipv4": "10.81.128.0", "port": 8000}
+```
+
+#### `/kontena/nginx/udp/:service/server`
+
+```json
+{"port": 8000}
+```
+
+#### `/kontena/nginx/udp/:service/upstreams/:upstream`
+
+```json
+{"ipv4": "10.81.128.0", "port": 8000}
+```
