@@ -1,29 +1,29 @@
 {{ $listen_ipv4 := (getenv "LISTEN_IPV4") }}
 {{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
 
-{{ range $service := lsdir "/services/tcp"}}
+{{ range $service := lsdir "/tcp"}}
 	# {{$service}}
-	{{ $tcp := json (getv (printf "/services/tcp/%s/tcp" $service)) }}
 	upstream tcp-{{$service}} {
-	{{ range gets (printf "/services/tcp/%s/containers/*" $service) }}
+	{{ range gets (printf "/tcp/%s/upstreams/*" $service) }}
 		{{ $name := base .Key }}
-		{{ $container := json .Value }}
+		{{ $upstream := json .Value }}
 		# {{$name}}
-		{{ if and $container.ipv4 $container.tcp }}
-		server {{$container.ipv4}}:{{$container.tcp}};
+		{{ if and $upstream.ipv4 $upstream.port }}
+		server {{$upstream.ipv4}}:{{$upstream.port}};
 		{{ end }}
-		{{ if and $container.ipv6 $container.tcp }}
-		server [{{$container.ipv6}}]:{{$container.tcp}};
+		{{ if and $upstream.ipv6 $upstream.port }}
+		server [{{$upstream.ipv6}}]:{{$upstream.port}};
 		{{ end }}
 	{{ end }}
 	}
 
+	{{ $server := json (getv (printf "/tcp/%s/server" $service)) }}
 	server {
 	{{ if $listen_ipv4 }}
-		listen {{$listen_ipv4}}:{{$tcp.port}};
+		listen {{$listen_ipv4}}:{{$server.port}};
 	{{ end }}
 	{{ if $listen_ipv6 }}
-		listen [{{$listen_ipv6}}]:{{$tcp.port}};
+		listen [{{$listen_ipv6}}]:{{$server.port}};
 	{{ end }}
 
 		proxy_pass tcp-{{$service}};

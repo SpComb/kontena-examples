@@ -2,18 +2,18 @@
 {{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
 {{ $listen_http := or (getenv "LISTEN_HTTP") "80" }}
 
-{{ range $service := lsdir "/services/http"}}
+{{ range $service := lsdir "/http"}}
 	# {{$service}}
 	upstream {{$service}} {
-	{{ range gets (printf "/services/http/%s/containers/*" $service) }}
+	{{ range gets (printf "/http/%s/upstreams/*" $service) }}
 		{{ $name := base .Key }}
-		{{ $container := json .Value }}
+		{{ $upstream := json .Value }}
 		# {{$name}}
-		{{ if and $container.ipv4 $container.http }}
-		server {{$container.ipv4}}:{{$container.http}};
+		{{ if and $upstream.ipv4 $upstream.port }}
+		server {{$upstream.ipv4}}:{{$upstream.port}};
 		{{ end }}
-		{{ if and $container.ipv6 $container.http }}
-		server {{$container.ipv6}}:{{$container.http}};
+		{{ if and $upstream.ipv6 $upstream.port }}
+		server {{$upstream.ipv6}}:{{$upstream.port}};
 		{{ end }}
 	{{ end }}
 	}
@@ -28,31 +28,31 @@ server {
 	listen [{{$listen_ipv6}}]:{{$listen_http}} default_server;
 {{ end }}
 
-{{ range $service := lsdir "/services/http"}}
-	{{ $http := json (getv (printf "/services/http/%s/http" $service)) }}
-	{{ if ($http.location) }}
+{{ range $service := lsdir "/http"}}
+	{{ $server := json (getv (printf "/http/%s/server" $service)) }}
+	{{ if ($server.location) }}
 		# {{$service}}
-		location {{$http.location}} {
+		location {{$server.location}} {
 			proxy_pass http://{{$service}};
 		}
 	{{ end }}
 {{ end }}
 }
 
-{{ range $service := lsdir "/services/http"}}
-	{{ $http := json (getv (printf "/services/http/%s/http" $service)) }}
-	{{ if or $http.listen $http.host }}
+{{ range $service := lsdir "/http"}}
+	{{ $server := json (getv (printf "/http/%s/server" $service)) }}
+	{{ if or $server.port $server.host }}
 		# {{$service}}
 		server {
 		{{ if $listen_ipv4 }}
-			listen {{$listen_ipv4}}:{{or $http.listen $listen_http}};
+			listen {{$listen_ipv4}}:{{or $server.port $listen_http}};
 		{{ end }}
 		{{ if $listen_ipv6 }}
-			listen [{{$listen_ipv6}}]:{{or $http.listen $listen_http}};
+			listen [{{$listen_ipv6}}]:{{or $server.port $listen_http}};
 		{{ end }}
 
-		{{ if $http.host }}
-			server_name {{$http.host}}{{range $alias := $http.aliases}} {{$alias}}{{end}};
+		{{ if $server.host }}
+			server_name {{$server.host}}{{range $alias := $server.aliases}} {{$alias}}{{end}};
 		{{end}}
 
 			location / {

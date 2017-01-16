@@ -2,7 +2,7 @@
 src   = "nginx_http.conf.template"
 dest  = "/etc/nginx/http.conf"
 keys  = [
-  "/services/http",
+  "/http",
 ]
 
 check_cmd = "/usr/sbin/nginx -t"

@@ -2,7 +2,7 @@
 src   = "nginx_stream_udp.conf.template"
 dest  = "/etc/nginx/stream_udp.conf"
 keys  = [
-  "/services/udp",
+  "/udp",
 ]
 
 check_cmd = "/usr/sbin/nginx -t"

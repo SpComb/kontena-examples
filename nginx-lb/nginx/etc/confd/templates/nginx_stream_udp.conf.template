@@ -1,32 +1,31 @@
 {{ $listen_ipv4 := (getenv "LISTEN_IPV4") }}
 {{ $listen_ipv6 := (getenv "LISTEN_IPV6") }}
 
-{{ range $service := lsdir "/services/udp"}}
+{{ range $service := lsdir "/udp"}}
 	# {{$service}}
-	{{ $udp := json (getv (printf "/services/udp/%s/udp" $service)) }}
-		upstream udp-{{$service}} {
-		{{ range gets (printf "/services/udp/%s/containers/*" $service) }}
-			{{ $name := base .Key }}
-			{{ $container := json .Value }}
-			# {{$name}}
-			{{ if and $container.ipv4 $container.udp }}
-			server {{$container.ipv4}}:{{$container.udp}};
-			{{ end }}
-			{{ if and $container.ipv6 $container.udp }}
-			server [{{$container.ipv6}}]:{{$container.udp}};
-			{{ end }}
+	upstream udp-{{$service}} {
+	{{ range gets (printf "/udp/%s/upstreams/*" $service) }}
+		{{ $name := base .Key }}
+		{{ $upstream := json .Value }}
+		# {{$name}}
+		{{ if and $upstream.ipv4 $upstream.port }}
+		server {{$upstream.ipv4}}:{{$upstream.port}};
 		{{ end }}
-		}
-
-		server {
-		{{ if $listen_ipv4 }}
-			listen {{$listen_ipv4}}:{{$udp.port}} udp;
+		{{ if and $upstream.ipv6 $upstream.port }}
+		server [{{$upstream.ipv6}}]:{{$upstream.port}};
 		{{ end }}
-		{{ if $listen_ipv6 }}
-			listen [{{$listen_ipv6}}]:{{$udp.port}} udp;
-		{{ end }}
-
-			proxy_pass udp-{{$service}};
-		}
 	{{ end }}
+	}
+
+	{{ $server := json (getv (printf "/udp/%s/server" $service)) }}
+	server {
+	{{ if $listen_ipv4 }}
+		listen {{$listen_ipv4}}:{{$server.port}} udp;
+	{{ end }}
+	{{ if $listen_ipv6 }}
+		listen [{{$listen_ipv6}}]:{{$server.port}} udp;
+	{{ end }}
+
+		proxy_pass udp-{{$service}};
+	}
 {{ end }}
