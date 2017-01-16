@@ -21,7 +21,8 @@ COPY etc/nginx/ /etc/nginx/
 COPY etc/confd/ /etc/confd/
 
 ENV \
-  LISTEN_IPV4=0.0.0.0
+  LISTEN_IPV4=0.0.0.0 \
+  LISTEN_IPV6=::
 
 CMD ["/init.sh"]
 
