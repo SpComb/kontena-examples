@@ -14,6 +14,9 @@ variables:
     default: /whoami
 services:
     whoami:
-        image: registry.${GRID}.kontena.local/whoami
-        build: .
-        instances: ${scale}
+      image: registry.${GRID}.kontena.local/whoami
+      build: .
+      instances: ${scale}
+      environment:
+        io.kontena.nginx.service: whoami
+        io.kontena.nginx.tcp: 8000
