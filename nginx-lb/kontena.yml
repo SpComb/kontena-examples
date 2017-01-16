@@ -1,0 +1,17 @@
+stack: terom/nginx-lb
+version: 0.0.0
+services:
+  registrator:
+    image: registry.test.kontena.local/nginx-registrator
+    build: registrator
+    deploy:
+      strategy: daemon
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  nginx:
+    image: registry.test.kontena.local/nginx
+    build: nginx
+    deploy:
+      strategy: daemon
+    network_mode: host
