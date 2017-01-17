@@ -1,7 +1,10 @@
 FROM golang:1.7
 
 ADD . /go/src/app
-RUN go install -v app
+
+WORKDIR /go/src/app
+
+RUN go install -v .
 
 CMD ["/go/bin/app"]
 

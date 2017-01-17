@@ -90,10 +90,11 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-func httpMain(listen string) {
+func httpMain(listen string, static string) {
   log.Printf("http listen %v", listen)
 
-  http.HandleFunc("/", httpHandler)
+  http.Handle("/", http.FileServer(http.Dir(static)))
+  http.HandleFunc("/api", httpHandler)
 
   if err := http.ListenAndServe(listen, nil); err != nil {
     log.Fatalf("http.ListenAndServe %v: %v", err)
