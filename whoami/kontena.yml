@@ -22,4 +22,4 @@ services:
         io.kontena.nginx.tcp: 8000
         io.kontena.nginx.udp: 8000
         io.kontena.nginx.http: 8000
-        io.kontena.nginx.http.location: /whoami
+        io.kontena.nginx.http.location: /
