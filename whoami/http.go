@@ -2,8 +2,6 @@ package main
 
 import (
   "encoding/json"
-  "fmt"
-  "net"
   "net/http"
   "log"
 )
@@ -32,36 +30,14 @@ func (httpInfo *HTTPInfo) fromHTTP(r *http.Request) error {
   return nil
 }
 
-func (networkInfo *NetworkInfo) fromHttp(httpRequest *http.Request) error {
-  if httpRequest.RemoteAddr == "" {
-
-  } else if tcpAddr, err := net.ResolveTCPAddr("tcp", httpRequest.RemoteAddr); err != nil {
-    return fmt.Errorf("net.ResolveTCPAddr %v: %v", httpRequest.RemoteAddr, err)
-  } else {
-    networkInfo.RemoteAddr = tcpAddr
-  }
-
-  // this address is just the server listen address :(
-  // https://github.com/golang/go/issues/6732#issuecomment-273164492
-  if localAddr, ok := httpRequest.Context().Value(http.LocalAddrContextKey).(net.Addr); ok {
-    networkInfo.LocalAddr = localAddr
-  }
-
-  return nil
-}
-
 type Whoami struct {
 	OS      OSInfo
   Network NetworkInfo
   HTTP    HTTPInfo
 }
 
-
 func (whoami *Whoami) fromHTTP(r *http.Request) error {
   if err := whoami.OS.fromOS(); err != nil {
-    return err
-  }
-  if err := whoami.Network.fromHttp(r); err != nil {
     return err
   }
   if err := whoami.HTTP.fromHTTP(r); err != nil {
@@ -80,11 +56,38 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
   w.Header().Set("Content-Type", "application/json")
+  w.Header().Set("Connection", "close")
+  w.Header().Set("Transfer-Encoding", "identity")
   w.WriteHeader(200)
 
-  if err := json.NewEncoder(w).Encode(whoami); err != nil {
-    log.Printf("json.Encode: %v", err)
-	}
+  // hijack to get Network.LocalAddr?
+  if hijacker, ok := w.(http.Hijacker); !ok {
+    if err := whoami.Network.fromHttp(r); err != nil {
+      panic(err)
+    }
+
+    if err := json.NewEncoder(w).Encode(whoami); err != nil {
+      panic(err)
+  	}
+  } else if conn, bufio, err := hijacker.Hijack(); err != nil {
+    panic(err)
+  } else {
+    defer conn.Close()
+
+    // get real network info from conn
+    if err := whoami.Network.fromConn(conn); err != nil {
+      panic(err)
+    }
+
+    // write JSON responses
+    if err := json.NewEncoder(bufio).Encode(whoami); err != nil {
+      panic(err)
+    }
+
+    if err := bufio.Flush(); err != nil {
+      panic(err)
+    }
+  }
 }
 
 func httpMain(listen string) {
