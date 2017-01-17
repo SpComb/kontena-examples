@@ -19,6 +19,13 @@ This requires `--no-pull` to use the local `kontena/registrator:dev` image, inst
 
     $ kontena stack install
 
+## Issues
+
+The `nginx` service container needs some proper pid-1 init to run both `nginx` and `confd`.
+The current `init.sh` behaves badly if the daemonized nginx exits with an invalid nginx config, and the container will enter a Docker restart loop where confd is unable to fix the config.
+
+This can happen if there is a service without any upstreams, and nginx rejects the config with an empty upstream..
+
 ## Usage
 
 Configure your service with `io.kontena.nginx.*` envs:
